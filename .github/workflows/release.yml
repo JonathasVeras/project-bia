@@ -51,11 +51,18 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: List build artifacts
-        if: always()
+      - name: List build artifacts (Linux)
+        if: always() && matrix.platform == 'ubuntu-22.04'
         run: |
           echo "=== Checking artifacts ==="
-          find src-tauri/target -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.AppImage" 2>/dev/null || echo "No artifacts found"
+          find src-tauri/target -name "*.deb" -o -name "*.AppImage" 2>/dev/null || echo "No artifacts found"
+
+      - name: List build artifacts (Windows)
+        if: always() && matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Host "=== Checking artifacts ==="
+          Get-ChildItem -Path src-tauri/target -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
 
       - name: Build and release
         uses: tauri-apps/tauri-action@v1
