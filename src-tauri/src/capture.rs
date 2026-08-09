@@ -1,10 +1,13 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
 use image::{imageops, ImageEncoder, RgbImage};
+use std::sync::Mutex;
 use tauri::Manager;
 use xcap::Monitor;
 
 const MAX_WIDTH: u32 = 1280;
 const JPEG_QUALITY: u8 = 80;
+
+static PRE_CAPTURED: Mutex<Option<String>> = Mutex::new(None);
 
 fn rgba_to_rgb(rgba: &image::RgbaImage) -> RgbImage {
     let raw = rgba.as_raw();
@@ -16,21 +19,10 @@ fn rgba_to_rgb(rgba: &image::RgbaImage) -> RgbImage {
         .expect("Falha ao converter RGBA para RGB")
 }
 
-#[tauri::command]
-pub async fn capture_screen_to_base64(app: tauri::AppHandle) -> Result<String, String> {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.hide();
-        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-    }
-
+fn capture_and_encode() -> Result<String, String> {
     let monitors = Monitor::all().map_err(|e| e.to_string())?;
     let monitor = monitors.first().ok_or("Nenhum monitor encontrado")?;
     let image = monitor.capture_image().map_err(|e| e.to_string())?;
-
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.show();
-        let _ = window.set_always_on_top(true);
-    }
 
     let resized = if image.width() > MAX_WIDTH {
         let ratio = MAX_WIDTH as f64 / image.width() as f64;
@@ -53,6 +45,38 @@ pub async fn capture_screen_to_base64(app: tauri::AppHandle) -> Result<String, S
         )
         .map_err(|e| e.to_string())?;
 
-    let base64_str = STANDARD.encode(jpeg_buffer);
-    Ok(base64_str)
+    Ok(STANDARD.encode(jpeg_buffer))
+}
+
+pub fn capture_before_show() -> Result<String, String> {
+    let base64 = capture_and_encode()?;
+    let mut guard = PRE_CAPTURED.lock().map_err(|e| e.to_string())?;
+    *guard = Some(base64.clone());
+    Ok(base64)
+}
+
+pub fn take_pre_captured() -> Option<String> {
+    let mut guard = PRE_CAPTURED.lock().ok()?;
+    guard.take()
+}
+
+#[tauri::command]
+pub async fn capture_screen_to_base64(app: tauri::AppHandle) -> Result<String, String> {
+    if let Some(pre) = take_pre_captured() {
+        return Ok(pre);
+    }
+
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.hide();
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    }
+
+    let base64 = capture_and_encode()?;
+
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_always_on_top(true);
+    }
+
+    Ok(base64)
 }

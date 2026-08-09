@@ -1,4 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use tauri::Emitter;
 use tauri::Manager;
 use tauri_plugin_global_shortcut::ShortcutState;
 
@@ -19,9 +20,13 @@ pub fn run() {
                             if window.is_visible().unwrap_or(false) {
                                 let _ = window.hide();
                             } else {
+                                let _ = capture::capture_before_show();
+
                                 let _ = window.unminimize();
                                 let _ = window.show();
                                 let _ = window.set_always_on_top(true);
+                                let _ = window.emit("screenshot-ready", ());
+
                                 let win = window.clone();
                                 std::thread::spawn(move || {
                                     std::thread::sleep(std::time::Duration::from_millis(150));

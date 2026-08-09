@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { captureAndAnalyze, sendTextOnly, sendWithContext } from './lib/ai-pipeline';
 import { ChatMessage, setApiKey } from './lib/gemini';
 import Markdown from 'react-markdown';
@@ -41,6 +42,23 @@ function AppContent() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const appWebview = getCurrentWebviewWindow();
+    const unlisten = appWebview.listen('screenshot-ready', () => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: 'system',
+          content: 'Screenshot capturado! Digite sua pergunta sobre a tela.',
+        },
+      ]);
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
 
   useEffect(() => {
     if (apiKeyInput.trim()) {
