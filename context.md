@@ -20,7 +20,7 @@ O projeto superou a fase de *setup* inicial e já possui a base do overlay confi
 1. **Janela Nativa:** Configurada no `tauri.conf.json` com `"decorations": false` e `"transparent": true` para atuar como um overlay sem bordas do sistema.
 2. **Interface de Chat:** O frontend em React (`App.tsx`) possui um layout funcional de chat, com input de texto, renderização condicional de mensagens (User vs. Assistant) e *auto-scroll* implementado.
 3. **Comunicação IPC:** O frontend consegue invocar comandos do backend nativo em Rust.
-4. **Atalho Global (WIP):** Implementação da lógica de Show/Hide usando o `@tauri-apps/plugin-global-shortcut`. A janela busca escutar atalhos (ex: `Alt+Shift+X`) para alternar sua visibilidade (`appWindow.show()` / `appWindow.hide()`) e focar no input de texto automaticamente.
+4. **Atalho Global (WIP):** Implementação da lógica de Show/Hide usando o `@tauri-apps/plugin-global-shortcut`. A janela busca escutar atalhos (ex: `Alt+L`) para alternar sua visibilidade (`appWindow.show()` / `appWindow.hide()`) e focar no input de texto automaticamente.
 
 ## 🚧 Desafios Técnicos Recentes
 * **Conflitos de Atalho no Linux:** Lidando com a interceptação de teclas no gerenciador de janelas (Cinnamon/X11 vs Wayland). O atalho precisa desviar das configurações nativas do sistema para registrar corretamente no Tauri.

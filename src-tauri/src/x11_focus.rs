@@ -82,7 +82,10 @@ pub fn init() {
     let mut guard = DISPLAY.lock().unwrap();
     if guard.is_none() {
         unsafe {
-            *guard = Some(DisplayHandle(XOpenDisplay(std::ptr::null())));
+            let dpy = XOpenDisplay(std::ptr::null());
+            if !dpy.is_null() {
+                *guard = Some(DisplayHandle(dpy));
+            }
         }
     }
 }

@@ -2,6 +2,8 @@
 use tauri::Manager;
 use tauri_plugin_global_shortcut::ShortcutState;
 
+mod capture;
+mod gemini;
 mod x11_focus;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -9,7 +11,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_shortcut("Alt+Shift+X")
+                .with_shortcut("Alt+L")
                 .expect("atalho inválido")
                 .with_handler(|app, _shortcut, event| {
                     if event.state() == ShortcutState::Pressed {
@@ -33,6 +35,13 @@ pub fn run() {
                 })
                 .build(),
         )
+        .invoke_handler(tauri::generate_handler![
+            capture::capture_screen_to_base64,
+            gemini::set_gemini_api_key,
+            gemini::gemini_analyze_image,
+            gemini::gemini_analyze_text,
+            gemini::gemini_analyze_with_history
+        ])
         .setup(|app| {
             x11_focus::init();
             #[cfg(target_os = "linux")]

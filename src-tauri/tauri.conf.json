@@ -13,15 +13,17 @@
     "windows": [
       {
         "title": "project-bia",
-        "width": 800,
-        "height": 600,
+        "width": 420,
+        "height": 900,
+        "x": 0,
+        "y": 0,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true
   }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'"
     }
   },
   "bundle": {
